@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">AniFly</string>
+    <string name="share">Share</string>
+    <string name="today">ToDay</string>
+    <string name="yesterday">Yesterday</string>
+    <string name="date_at_time">Date At Now</string>
+    <string name="gotosee">More...</string>
+</resources>
