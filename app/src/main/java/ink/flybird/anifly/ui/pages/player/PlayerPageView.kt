@@ -2,7 +2,6 @@ package ink.flybird.anifly.ui.pages.player
 
 import android.annotation.SuppressLint
 import android.util.Log
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
@@ -28,16 +27,16 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.google.android.exoplayer2.C
-import com.google.android.exoplayer2.MediaItem
-import com.google.android.exoplayer2.MediaMetadata
 import com.google.android.exoplayer2.util.MimeTypes
-import ink.flybird.anifly.ui.components.AFPlayerController
+import ink.flybird.anifly.data.exception.AFPlayerError
+import ink.flybird.anifly.data.exception.ErrorReason
+import ink.flybird.anifly.ui.components.AFPlayPageInfo
+import ink.flybird.anifly.ui.components.AFPlayerViewModel
 import ink.flybird.anifly.ui.components.AFRecommandCard
 import ink.flybird.anifly.ui.components.AFScaffold
 import ink.flybird.anifly.ui.components.AFVideoPlayer
-import ink.flybird.anifly.ui.components.player.AFPlayer
-import ink.flybird.anifly.ui.components.player.media.AFMediaItem
+import ink.flybird.anifly.ui.extension.collectAsStateValue
+import ink.flybird.anifly.ui.pages.AFRouteName
 import kotlinx.coroutines.launch
 
 @SuppressLint("StateFlowValueCalledInComposition")
@@ -48,53 +47,59 @@ fun PlayerPageView(
     viewModel: PlayerPageViewModel = hiltViewModel(),
     id : String
 ) {
-    var title by remember { mutableStateOf("PlayerPage") }
-    var state by remember { mutableStateOf(false) }
-    val controller = AFPlayerController()
+    // [1] ViewModel Sync Data And Init Flow Values
+    viewModel.syncData(id)
+    val uiState = viewModel.playerUiState.collectAsStateValue()
 
-    val uriList: MutableList<AFMediaItem> by remember { mutableStateOf(ArrayList()) }
+    val title = uiState.title.collectAsStateValue(initial = "Bangumi Title")
+    val url = uiState.vedioUri.collectAsStateValue(initial = "")
+    val syncState = uiState.syncState.collectAsStateValue(initial = false)
+    
+    val playList = uiState.playList.collectAsStateValue(initial = emptyList())
+    val recommandList = uiState.recommandList.collectAsStateValue(initial = emptyList())
 
-    LaunchedEffect(state) {
+    // ========================================
+
+    // [2] Init Player View Model
+
+    val controller : AFPlayerViewModel = hiltViewModel()
+
+    LaunchedEffect(syncState) {
         launch {
-            if(!state) {
-                state = viewModel.syncData(id, state)
+            Log.d(javaClass.name, syncState.toString())
+            if(syncState) {
 
-                title = viewModel.getTitle()
-                Log.d(javaClass.name, "On Fetech Done ${viewModel.getUrl()}")
+                if(url.isBlank())
+                    throw AFPlayerError(ErrorReason.VIDEO_URL_EMPTY, "url is not loadable")
 
+                Log.d(javaClass.name, "On Fetech Done $url")
 
-                controller.setUri(viewModel.getUrl())
-                controller.setUp()
+                if(url.endsWith(".m3u8")) {
+                    controller.addMedia(url, MimeTypes.APPLICATION_M3U8)
+                }
+                if(url.endsWith(".mp4")) {
+                    controller.addMedia(url, MimeTypes.APPLICATION_MP4)
+                }
             }
         }
     }
-    
-    Log.d("playerpage", "On Draw")
+
+    // ===========================
 
     AFScaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        title,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                    Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 },
                 navigationIcon = {
-                    IconButton(onClick = { /* doSomething() */ }) {
-                        Icon(
-                            imageVector = Icons.Filled.ArrowBack,
-                            contentDescription = "Open Setting"
-                        )
+                    IconButton(onClick = { navController.navigateUp() }) {
+                        Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "Go Back")
                     }
                 },
                 actions = {
                     IconButton(onClick = { /* doSomething() */ }) {
-                        Icon(
-                            imageVector = Icons.Filled.More,
-                            contentDescription = "Search Something..."
-                        )
+                        Icon(imageVector = Icons.Filled.More, contentDescription = "More")
                     }
                 }
             )
@@ -106,7 +111,11 @@ fun PlayerPageView(
                 .fillMaxWidth()
                 .height(200.dp)
         ) {
-            AFVideoPlayer(controller = controller)
+            AFVideoPlayer(controller = controller, onFullScreenEnter = {
+                uiState.updateFullScreenState(true)
+            }, onFullScreenExit = {
+                uiState.updateFullScreenState(false)
+            })
         }
 
         var tabIndex by remember { mutableStateOf(0) }
@@ -124,18 +133,40 @@ fun PlayerPageView(
         when(tabIndex)
         {
             0 -> {
+
+                if(!syncState)
+                    return@AFScaffold
+
+                AFPlayPageInfo(
+                    title = title,
+                    videos = playList
+                ) {
+                    Log.d("playpage", it)
+                    navController.navigate("${AFRouteName.PlayerPage}/${it.replace("/v/", "").replace(".html", "")}")
+                }
+
                 LazyColumn {
-                    if(state) {
-                        for (item in viewModel.getRecommandList()) {
-                            item {
-                                AFRecommandCard(item.title, item.time, item.image) {
-                                    Log.d(javaClass.name, "clicked!")
-                                }
+                    for (item in recommandList) {
+                        item {
+                            AFRecommandCard(item.title, item.time, item.image, item.url) {
+                                Log.d(javaClass.name, it)
+                                navController.navigate("${AFRouteName.BangumiDetailPage}/${it.replace("/show/", "").replace(".html", "")}")
                             }
                         }
                     }
                 }
             }
+
+            1 -> {
+
+                Text(
+                    text = "尽情期待线上服务的上线~",
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+            }
+
+
         }
 
     }

@@ -3,6 +3,8 @@ package ink.flybird.anifly.data.exception
 enum class ErrorReason {
     VIDEO_URL_EMPTY,
     VIDEO_ID_ERROR,
+    VIDEO_PLAYER_NOT_INIT,
+    VIDEO_PLAYER_MEDIA_NOT_INIT,
     VIDEO_PLAYER_ERROR_DEFAULT
 }
 

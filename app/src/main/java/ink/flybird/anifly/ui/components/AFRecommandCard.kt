@@ -39,7 +39,8 @@ fun AFRecommandCard(
     title : String,
     subTitle : String,
     imgUri : String,
-    action : () -> Unit
+    uri : String,
+    action : (String) -> Unit
 ) {
     Card(
         shape = RoundedCornerShape(9.dp),
@@ -50,7 +51,7 @@ fun AFRecommandCard(
             .height(100.dp)
             .padding(2.dp)
             .clickable {
-                action()
+                action(uri)
             },
         //shadowElevation = 10.dp
     ) {
@@ -67,8 +68,7 @@ fun AFRecommandCard(
                 AFAsyncImage(
                     contentScale = ContentScale.Crop,
                     data = imgUri,
-                    scale = Scale.FILL,
-                    precision = Precision.INEXACT,
+                    precision = Precision.AUTOMATIC,
                 )
             }
 
@@ -107,7 +107,7 @@ fun PreviewAFRC()
         for(i in 1..20)
         {
             item {
-                AFRecommandCard(title = "江户前的废柴精灵", subTitle = "最新:第7集", imgUri = "http://css.yhdmtu.me/news/2023/04/08/20230408092927980.jpg") {
+                AFRecommandCard(title = "江户前的废柴精灵", subTitle = "最新:第7集", imgUri = "http://css.yhdmtu.me/news/2023/04/08/20230408092927980.jpg", "") {
 
                 }
             }

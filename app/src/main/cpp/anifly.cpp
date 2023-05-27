@@ -168,12 +168,15 @@ Java_ink_flybird_anifly_network_AniCore_getPlayList(JNIEnv *env, jobject thiz, j
 
     jclass _page_class = env->GetObjectClass(page);
     jmethodID _page_class_set = env->GetMethodID(_page_class, "Set",
-                                                 "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
+                                                 "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
     env->CallVoidMethod(page, _page_class_set,
                         CS2JS(env, _page.title.c_str()),
                         CS2JS(env, _page.location.c_str()),
                         CS2JS(env, _page.time.c_str()),
-                        CS2JS(env, _page.type.c_str()));
+                        CS2JS(env, _page.type.c_str()),
+                        CS2JS(env, _page.image.c_str()),
+                        CS2JS(env, _page.update.c_str()),
+                        CS2JS(env, _page.detail.c_str()));
     env->DeleteLocalRef(_page_class);
 
 

@@ -16,6 +16,7 @@ import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import ink.flybird.anifly.data.common.AFSetting.useDarkTheme
 import ink.flybird.anifly.ui.extension.animatedComposable
+import ink.flybird.anifly.ui.pages.detil.DetilPageView
 import ink.flybird.anifly.ui.pages.home.HomePageView
 import ink.flybird.anifly.ui.pages.player.PlayerPageView
 import ink.flybird.anifly.ui.theme.AppTheme
@@ -63,10 +64,11 @@ fun MainEntry(
             }
 
             animatedComposable(
-                route = "${AFRouteName.BangumiDetailPage}/{baungumiID}",
-                arguments = listOf(navArgument("baungumiID") { type = NavType.StringType } )
+                route = "${AFRouteName.BangumiDetailPage}/{bangumiID}",
+                arguments = listOf(navArgument("bangumiID") { type = NavType.StringType } )
             ) {backStackEntry ->
                 val id = getID("bangumiID", backStackEntry)
+                DetilPageView(navController = navController, id = id)
             }
         }
     }

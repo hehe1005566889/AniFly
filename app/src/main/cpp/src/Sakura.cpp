@@ -142,10 +142,17 @@ namespace anicore
             
             HtmlParser parser;
             shared_ptr<HtmlDocument> doc = parser.Parse(result.c_str(), result.size());
-            
+
+            auto img = doc->GetElementByTagName("img").at(0);
+
             // Get Bangumi Infos
             auto rr = doc->GetElementByClassName("rate r").at(0);
-            rs.title = rr->GetElementByTagName("h1").at(0)->GetValue();
+            rs.title = img->GetAttribute("alt");
+            rs.image = img->GetAttribute("src");
+
+            rs.detail = doc->GetElementByClassName("info").at(0)->text();
+
+            rs.update = doc->GetElementByTagName("p").at(0)->text();
             
             auto sinfo = rr->GetElementByClassName("sinfo").at(0)->GetElementByTagName("span");
             rs.location = sinfo.at(1)->GetElementByTagName("a").at(0)->GetValue();

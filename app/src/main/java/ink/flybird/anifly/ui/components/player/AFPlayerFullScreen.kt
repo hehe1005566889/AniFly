@@ -23,10 +23,13 @@ import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.ui.StyledPlayerView
 import com.google.android.exoplayer2.util.RepeatModeUtil
 import ink.flybird.anifly.ui.components.player.extensions.findActivity
+import ink.flybird.anifly.ui.components.player.extensions.lockScreenDrientation
 import ink.flybird.anifly.ui.components.player.extensions.setFullScreen
 import ink.flybird.anifly.ui.components.player.media.AFPlayerCache
 import ink.flybird.anifly.ui.components.player.media.AFPlayerConfig
 import ink.flybird.anifly.ui.components.player.media.applyToExoPlayerView
+
+var fullScreenState = false
 
 /**
  * ExoPlayer does not support full screen views by default.
@@ -71,18 +74,20 @@ internal fun VideoPlayerFullScreenDialog(
             usePlatformDefaultWidth = false,
             securePolicy = securePolicy,
             decorFitsSystemWindows = false,
-
         ),
     ) {
+
         val view = LocalView.current
-        StyledPlayerView.switchTargetView(player, currentPlayerView, fullScreenPlayerView)
+        LaunchedEffect(Unit) {
+            StyledPlayerView.switchTargetView(player, currentPlayerView, fullScreenPlayerView)
 
-        val currentActivity = context.findActivity()
-        currentActivity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-        currentActivity.setFullScreen(true)
+            val currentActivity = context.findActivity()
+            currentActivity.lockScreenDrientation(orientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE)
+           // currentActivity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+            currentActivity.setFullScreen(true)
 
-        (view.parent as DialogWindowProvider).window.setFullScreen(true)
-        // fuck ass
+            (view.parent as DialogWindowProvider).window.setFullScreen(true)
+        }
 
         LaunchedEffect(controllerConfig) {
             controllerConfig.applyToExoPlayerView(fullScreenPlayerView) {

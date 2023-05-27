@@ -33,6 +33,9 @@ namespace anicore
         std::string time;
         std::string location;
         std::string type;
+        std::string image;
+        std::string update;
+        std::string detail;
         
         std::list<BangumiPlayList> result;
         /// @brief Bangumi Recommands

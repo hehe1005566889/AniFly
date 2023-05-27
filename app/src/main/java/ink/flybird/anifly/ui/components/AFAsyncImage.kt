@@ -27,7 +27,7 @@ fun AFAsyncImage(
     modifier: Modifier = Modifier,
     data: Any? = null,
     size: Size = Size.ORIGINAL,
-    scale: Scale = Scale.FIT,
+    scale: Scale = Scale.FILL,
     precision: Precision = Precision.AUTOMATIC,
     contentScale: ContentScale = ContentScale.Fit,
     contentDescription: String = "",

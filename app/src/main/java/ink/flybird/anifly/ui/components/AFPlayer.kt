@@ -1,60 +1,53 @@
 package ink.flybird.anifly.ui.components
 
 import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.ExoPlayer
-import com.google.android.exoplayer2.MediaItem
-import com.google.android.exoplayer2.MediaMetadata
-import com.google.android.exoplayer2.analytics.AnalyticsListener
-import com.google.android.exoplayer2.util.MimeTypes
+import ink.flybird.anifly.data.exception.AFPlayerError
+import ink.flybird.anifly.data.exception.ErrorReason
 import ink.flybird.anifly.ui.components.player.AFPlayer
 import ink.flybird.anifly.ui.components.player.AFRepeatMode
-import ink.flybird.anifly.ui.components.player.media.AFMediaItem
 import ink.flybird.anifly.ui.components.player.media.AFPlayerConfig
-
-class AFPlayerController
-{
-    private lateinit var player : ExoPlayer
-    private lateinit var item : MediaItem
-
-    fun set(player: ExoPlayer)
-    {
-        this.player = player
-
-    }
-    fun get() : ExoPlayer
-    { return player }
-
-    fun setUp()
-    {
-        player.addMediaItem(item)
-    }
-
-    fun setUri(uri : String)
-    {
-        item = MediaItem.Builder().apply {
-            setUri(uri)
-            setMediaMetadata(MediaMetadata.Builder().setTitle("Widevine DASH cbcs: Tears").build())
-            setMimeType(MimeTypes.APPLICATION_M3U8)
-            setDrmConfiguration(
-                MediaItem.DrmConfiguration.Builder(C.WIDEVINE_UUID)
-                    .build()
-            )
-        }.build()
-    }
-}
+import ink.flybird.anifly.ui.extension.collectAsStateValue
 
 @Composable
 fun AFVideoPlayer(
-    controller: AFPlayerController
+    controller: AFPlayerViewModel,
+    onFullScreenEnter: () -> Unit = {},
+    onFullScreenExit: () -> Unit = {}
 ) {
+
+    val playerState = controller.playerState.collectAsStateValue()
+
+    val player = playerState.player.collectAsStateValue(initial = null)
+    val media = playerState.mediaItems.collectAsStateValue(initial = null)
+
+    val mediaState = playerState.isMediaAvailable.collectAsStateValue(initial = false)
+    val playerAvaState = playerState.isPlayerAvailable.collectAsStateValue(initial = false)
+
+    LaunchedEffect(mediaState) {
+        if (mediaState && playerAvaState) {
+            if (player == null)
+                throw AFPlayerError(ErrorReason.VIDEO_PLAYER_NOT_INIT)
+            if (media == null)
+                throw AFPlayerError(ErrorReason.VIDEO_PLAYER_MEDIA_NOT_INIT)
+            player.addMediaItem(media)
+        }
+    }
+
+    LaunchedEffect(playerState) {
+        if (mediaState && playerAvaState) {
+            if (player == null)
+                throw AFPlayerError(ErrorReason.VIDEO_PLAYER_NOT_INIT)
+            if (media == null)
+                throw AFPlayerError(ErrorReason.VIDEO_PLAYER_MEDIA_NOT_INIT)
+            player.addMediaItem(media)
+        }
+    }
 
     AFPlayer(
         mediaItems = ArrayList(),
@@ -71,7 +64,7 @@ fun AFVideoPlayer(
         controllerConfig = AFPlayerConfig(
             showSpeedAndPitchOverlay = true,
             showSubtitleButton = true,
-            showCurrentTimeAndTotalTime= true,
+            showCurrentTimeAndTotalTime = true,
             showBufferingProgress = true,
             showForwardIncrementButton = true,
             showBackwardIncrementButton = false,
@@ -85,15 +78,16 @@ fun AFVideoPlayer(
         ),
         playerInstance = {
 
-            val instance : ExoPlayer = this
+            val instance: ExoPlayer = this
             controller.set(instance)
 
         },
+        onFullScreenEnter = onFullScreenEnter,
+        onFullScreenExit = onFullScreenExit,
         modifier = Modifier
             .fillMaxWidth()
             .defaultMinSize(145.dp, 145.dp),
     )
-
 
 
 }
