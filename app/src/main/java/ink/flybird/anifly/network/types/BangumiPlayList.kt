@@ -14,4 +14,5 @@ class BangumiPlayListList
 
     fun Get() : MutableList<BangumiPlayList>
     { return list }
+
 }

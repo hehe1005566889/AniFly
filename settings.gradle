@@ -14,8 +14,12 @@ dependencyResolutionManagement {
         mavenCentral()
         jcenter()
         maven { url 'https://jitpack.io' }
+        maven {
+            url "https://androidx.dev/storage/compose-compiler/repository/"
+        }
     }
 }
 
 rootProject.name = "AniFly"
 include ':app'
+//include ':NativeBitmapFactory'

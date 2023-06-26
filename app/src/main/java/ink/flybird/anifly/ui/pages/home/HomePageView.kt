@@ -1,21 +1,17 @@
 package ink.flybird.anifly.ui.pages.home
 
-import android.util.Log
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.Chat
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -23,27 +19,45 @@ import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import ink.flybird.anifly.ui.components.AFScaffold
-import ink.flybird.anifly.ui.components.AFSearchBar
-import ink.flybird.anifly.ui.pages.AFRouteName
-import ink.flybird.anifly.ui.pages.common.RouteNavigation.NAVIGATIONS
-import ink.flybird.anifly.ui.pages.common.RouteNavigation.selectID
+import ink.flybird.anifly.ui.extension.collectAsStateValue
+import ink.flybird.anifly.ui.pages.home.main.CommunityPageView
+import ink.flybird.anifly.ui.pages.home.main.MainPageHeaderView
+import ink.flybird.anifly.ui.pages.home.main.MainPageView
+import ink.flybird.anifly.ui.pages.home.main.ThemesPageView
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomePageView(
     homePageViewModel: HomePageViewModel = hiltViewModel(),
     navController: NavController
 ) {
 
+    homePageViewModel.homeUiState.collectAsStateValue()
+    val pages = listOf(
+        NavPage(Icons.Default.Home, "主页", header = {
+            MainPageHeaderView(navController = navController)
+        }) {
+            MainPageView(navController = navController)
+        },
+        NavPage(Icons.Default.Category, "分类") {
+            ThemesPageView(navController = navController)
+        },
+        NavPage(Icons.Default.Chat, "社区") {
+            CommunityPageView(navController = navController)
+        }
+    )
+
+    var cid by rememberSaveable { mutableIntStateOf(0) }
+    var id by rememberSaveable { mutableStateOf(pages[0].label) }
+
     AFScaffold(
         bottomBar = {
             NavigationBar(modifier = Modifier.fillMaxWidth()) {
-                NAVIGATIONS.forEach { rd ->
+                pages.forEach { rd ->
                     NavigationBarItem(
-                        selected =  selectID == rd.label ,
+                        selected = id == rd.label,
                         onClick = {
-                            selectID = rd.label
-                            //navController.navigate(rd.dest)
+                            id = rd.label
+                            cid = (pages.indexOf(rd))
                         },
                         icon = { Image(imageVector = rd.icon, contentDescription = rd.label) },
                         label = { Text(text = rd.label) }
@@ -51,37 +65,11 @@ fun HomePageView(
                 }
             }
         },
+        content = {
+            pages[cid].page()
+        },
         topBar = {
-           AFSearchBar(
-               text = "AniFly",
-               icon = Icons.Default.Settings,
-               action = {
-
-               }) {
-               Log.d("AniFly", it)
-           }
+            pages[cid].header?.let { it() }
         }
-    ) {
-
-        var setext by rememberSaveable { mutableStateOf("5869") }
-
-        LazyColumn {
-            item {
-                TextField(value = setext, onValueChange = { setext = it }, label = { Text(text = "ID") })
-            }
-
-            item {
-                Button(onClick = { navController.navigate("${AFRouteName.PlayerPage}/${setext}") }) {
-                    Text(text = "Open Player Page")
-                }
-            }
-
-            item {
-                Button(onClick = { navController.navigate("${AFRouteName.BangumiDetailPage}/${setext}") }) {
-                    Text(text = "Open Detil Page")
-                }
-            }
-        }
-
-    }
+    )
 }

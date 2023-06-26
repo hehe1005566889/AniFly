@@ -2,12 +2,12 @@ package ink.flybird.anifly.ui.components.player
 
 
 import android.annotation.SuppressLint
-import android.content.pm.ActivityInfo
 import android.graphics.Color
 import android.os.Handler
 import android.os.Looper
 import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.session.MediaSessionCompat
+import android.view.ViewGroup
 import android.widget.ImageButton
 import androidx.activity.compose.BackHandler
 import androidx.annotation.FloatRange
@@ -35,6 +35,7 @@ import com.google.android.exoplayer2.audio.AudioAttributes
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
 import com.google.android.exoplayer2.ext.mediasession.TimelineQueueNavigator
 import com.google.android.exoplayer2.source.DefaultMediaSourceFactory
+import com.google.android.exoplayer2.ui.AspectRatioFrameLayout.RESIZE_MODE_FILL
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT
 import com.google.android.exoplayer2.ui.StyledPlayerView
 import com.google.android.exoplayer2.upstream.DefaultDataSource
@@ -43,8 +44,6 @@ import com.google.android.exoplayer2.upstream.cache.CacheDataSource
 import com.google.android.exoplayer2.util.RepeatModeUtil.REPEAT_TOGGLE_MODE_ALL
 import com.google.android.exoplayer2.util.RepeatModeUtil.REPEAT_TOGGLE_MODE_NONE
 import com.google.android.exoplayer2.util.RepeatModeUtil.REPEAT_TOGGLE_MODE_ONE
-import ink.flybird.anifly.ui.components.player.extensions.findActivity
-import ink.flybird.anifly.ui.components.player.extensions.setFullScreen
 import ink.flybird.anifly.ui.components.player.media.AFMediaItem
 import ink.flybird.anifly.ui.components.player.media.AFPlayerCache
 import ink.flybird.anifly.ui.components.player.media.AFPlayerConfig
@@ -52,8 +51,9 @@ import ink.flybird.anifly.ui.components.player.media.applyToExoPlayerView
 import ink.flybird.anifly.ui.components.player.media.enterPIPMode
 import ink.flybird.anifly.ui.components.player.media.isActivityStatePipMode
 import ink.flybird.anifly.ui.components.player.media.toUri
-import java.util.*
 import kotlinx.coroutines.delay
+import java.util.*
+
 
 /**
  * [AFPlayer] is UI component that can play video in Jetpack Compose. It works based on ExoPlayer.
@@ -107,7 +107,7 @@ fun AFPlayer (
     fullScreenSecurePolicy: SecureFlagPolicy = SecureFlagPolicy.Inherit,
     onFullScreenEnter: () -> Unit = {},
     onFullScreenExit: () -> Unit = {},
-    enablePip: Boolean = false,
+    enablePip: Boolean = true,
     enablePipWhenBackPressed: Boolean = false,
     handleAudioFocus: Boolean = true,
     playerInstance: ExoPlayer.() -> Unit = {},
@@ -256,27 +256,28 @@ fun AFPlayer (
         VideoPlayerFullScreenDialog(
             player = player,
             currentPlayerView = defaultPlayerView,
-            controllerConfig = controllerConfig,
-            repeatMode = repeatMode,
-            onDismissRequest = {
-                fullScreenPlayerView?.let {
-                    StyledPlayerView.switchTargetView(player, it, defaultPlayerView)
-                    defaultPlayerView.findViewById<ImageButton>(com.google.android.exoplayer2.ui.R.id.exo_fullscreen)
-                        .performClick()
-                    val currentActivity = context.findActivity()
-                    currentActivity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-                    currentActivity.setFullScreen(false)
-                    onFullScreenExit()
-                }
-
-                isFullScreenModeEntered = false
-            },
-            securePolicy = fullScreenSecurePolicy,
-            enablePip = enablePip,
             fullScreenPlayerView = {
                 fullScreenPlayerView = this
             },
-        )
+            controllerConfig = controllerConfig,
+            repeatMode = repeatMode,
+            enablePip = enablePip,
+        ) {
+            fullScreenPlayerView?.let {
+                StyledPlayerView.switchTargetView(player, it, defaultPlayerView)
+
+
+                val parent = it.parent as ViewGroup
+                parent.removeView(fullScreenPlayerView)
+                it.removeAllViews()
+                it.removeAllViewsInLayout()
+
+                defaultPlayerView.findViewById<ImageButton>(com.google.android.exoplayer2.ui.R.id.exo_fullscreen)
+                    .performClick()
+                onFullScreenExit()
+            }
+            isFullScreenModeEntered = false
+        }
     }
 }
 
@@ -288,26 +289,23 @@ internal fun VideoPlayerSurface(
     usePlayerController: Boolean,
     handleLifecycle: Boolean,
     enablePip: Boolean,
-    onPipEntered: () -> Unit = {},
-    autoDispose: Boolean = true,
+    onPipEntered: () -> Unit = {}
 ) {
     val lifecycleOwner = rememberUpdatedState(LocalLifecycleOwner.current)
     val context = LocalContext.current
 
-    var isPendingPipMode by remember { mutableStateOf(false) }
+    var isPendingPipMode by remember { mutableStateOf(true) }
 
-    DisposableEffect(
-        AndroidView(
-            modifier = modifier,
-            factory = {
-                defaultPlayerView.apply {
-                    useController = usePlayerController
-                    resizeMode = RESIZE_MODE_FIT
-                    setBackgroundColor(Color.BLACK)
-                }
-            },
-        ),
-    ) {
+    DisposableEffect(AndroidView(
+        modifier = modifier,
+        factory = {
+            defaultPlayerView.apply {
+                useController = usePlayerController
+                resizeMode = RESIZE_MODE_FILL
+                setBackgroundColor(Color.BLACK)
+            }
+        },
+    )) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_PAUSE -> {
@@ -354,10 +352,7 @@ internal fun VideoPlayerSurface(
         lifecycle.addObserver(observer)
 
         onDispose {
-            if (autoDispose) {
-                player.release()
-                lifecycle.removeObserver(observer)
-            }
+           lifecycle.removeObserver(observer)
         }
     }
 }

@@ -13,7 +13,6 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import coil.compose.rememberAsyncImagePainter
-import coil.compose.rememberImagePainter
 import coil.request.ImageRequest
 import coil.size.Precision
 import coil.size.Scale
@@ -31,23 +30,26 @@ fun AFAsyncImage(
     precision: Precision = Precision.AUTOMATIC,
     contentScale: ContentScale = ContentScale.Fit,
     contentDescription: String = "",
-    @DrawableRes placeholder: Int? = R.drawable.panda,
-    @DrawableRes error: Int? = R.drawable.panda,
+    @DrawableRes placeholder: Int? = R.drawable.loading,
+    @DrawableRes error: Int? = R.drawable.fallback
 ) {
+    //val px = with(LocalDensity.current) {roundCorner.toPx() }
+
     Image(
         painter = rememberAsyncImagePainter(
             ImageRequest.Builder(LocalContext.current).data(data = data).apply(block = fun ImageRequest.Builder.() {
-                if (placeholder != null) placeholder(placeholder)
-                if (error != null) error(error)
+                //if (placeholder != null) placeholder(placeholder)
+                //if (error != null) error(error)
+                //transformations(RoundedCornersTransformation(10.0f,10.0f,10.0f,10.0f))
                 crossfade(true)
+                size(size)
                 scale(scale)
                 precision(precision)
-                size(size)
             }).build()
         ),
         contentDescription = contentDescription,
         contentScale = contentScale,
-        modifier = modifier,
+        modifier = modifier
     )
 
 //    coil.compose.AsyncImage(

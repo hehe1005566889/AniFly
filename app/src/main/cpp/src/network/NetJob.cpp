@@ -3,18 +3,18 @@
 #include "NetHandler.h"
 
 #include <filesystem>
+#include <utility>
 
 namespace anicore
 {
     NetJob::NetJob(JobType type, std::string url, std::function<void(JobResult, NetJob&)> func)
-        : url(url), back(func)
+        : url(std::move(url)), back(std::move(func))
     {
         HandleType(type);
     }
 
     NetJob::~NetJob()
-    {
-    }
+    = default;
 
     void NetJob::Release()
     {
@@ -82,7 +82,7 @@ namespace anicore
         std::ofstream outfile(path, std::ios::out | std::ios::binary);
 
         if (!outfile.is_open())
-        CError("=> [NetMan] Open File Faild");
+        CError("Open Write File Error", "=> [NetMan] Open File Faild");
 
         outfile.write(reinterpret_cast<const char *>(_response.data()),
                       static_cast<std::streamsize>(_response.size()));

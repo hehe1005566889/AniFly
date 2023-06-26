@@ -56,6 +56,6 @@ class NetHandler;
         
         std::function<void(JobResult, NetJob&)> back;
         JobType current_type;
-        bool use_async;
+        bool use_async{};
     };
 }

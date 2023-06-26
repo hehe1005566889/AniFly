@@ -17,11 +17,11 @@ namespace anicore
     public:
         ~NetHandler() {};
 
-        std::future<void> AsyncGetRequest(NetJob& job);
-        void SyncGetRequest(NetJob& job);
+        static std::future<void> AsyncGetRequest(NetJob& job);
+        static void SyncGetRequest(NetJob& job);
 
-        std::future<void> AsyncPostRequest(NetJob& job);
-        void SyncPostRequest(NetJob& job);
+        static std::future<void> AsyncPostRequest(NetJob& job);
+        static void SyncPostRequest(NetJob& job);
 
     public:
         static ref<NetHandler> CreateHandler();

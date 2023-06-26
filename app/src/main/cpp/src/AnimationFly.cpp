@@ -19,7 +19,7 @@ namespace anicore
                 CWarn("API Can't Use At Now");
                 break;
             default:
-                CError("API Not Support");
+                CError("Api Not Support", "API Not Support");
                 raise(1);
                 break;
         }

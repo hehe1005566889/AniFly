@@ -22,7 +22,7 @@ namespace anicore
           ActionMode(mode)
         {}
 
-        int ActionMode;
-        const char* ActionUrl;
+        [[maybe_unused]] int ActionMode;
+        [[maybe_unused]] const char* ActionUrl;
     };
 }

@@ -4,14 +4,14 @@
 
 namespace anicore
 {
-#define BASIC_URL "http://www.yinghuacd.com/search/{}/?page={}"
-#define BASE_URL "http://www.yinghuacd.com/"
+#define BASIC_URL "http://www.yinghuavideo.com/search/{}/?page={}"
+#define BASE_URL "http://www.yinghuavideo.com/"
 
     Sakura::Sakura()
     {
         _handler = NetHandler::CreateHandler();
         if(_handler.get() == nullptr)
-        CError("EPTY");
+        CError("Handler Init Error", "EPTY");
     }
 
     void Sakura::Search(const std::string& keyWord, int page, std::list<Bangumi> &rs)
@@ -24,6 +24,9 @@ namespace anicore
 
         NetJob job(JobType::AsyncGet, url, [&rs](JobResult code, NetJob &job)
         {
+            if(code == JobResult::Error)
+                return;
+
             std::string result;
             job.ToString(result);
             
@@ -68,6 +71,9 @@ namespace anicore
 
         NetJob job(JobType::AsyncGet, uri, [&rs](JobResult code, NetJob &job)
         {
+            if(code == JobResult::Error)
+                return;
+
             std::string result;
             job.ToString(result);
 
@@ -75,7 +81,6 @@ namespace anicore
             shared_ptr<HtmlDocument> doc = parser.Parse(result.c_str(), result.size());
             
             auto el = doc->GetElementByClassName("lpic").at(0)->GetElementByTagName("li");
-            auto it = el.size();
 
             for(const auto& item : el)
             {
@@ -107,6 +112,9 @@ namespace anicore
 
         NetJob job(JobType::AsyncGet, BASE_URL, [&rs, &day](JobResult code, NetJob &job)
         {
+            if(code == JobResult::Error)
+                return;
+
             std::string result;
             job.ToString(result);
             
@@ -137,6 +145,9 @@ namespace anicore
 
         NetJob job(JobType::AsyncGet, url, [&rs](JobResult code, NetJob &job)
         {
+            if(code == JobResult::Error)
+                return;
+
             std::string result;
             job.ToString(result);
             
@@ -203,6 +214,10 @@ namespace anicore
 
         NetJob job(JobType::SyncGet, url, [&page](JobResult code, NetJob &job)
         {
+
+            if(code == JobResult::Error)
+                return;
+
             std::string result;
             job.ToString(result);
 
@@ -249,6 +264,64 @@ namespace anicore
                 page.recommand.push_back(bangumi);
             }
             // =====================
+        });
+        job.Action(_handler.get());
+    }
+
+    void Sakura::GetRecentUpdate(std::map<std::string, std::list<Bangumi>> &rs) {
+        CInfo(BASE_URL);
+
+        NetJob job(JobType::AsyncGet, BASE_URL, [&rs](JobResult code, NetJob &job)
+        {
+            if(code == JobResult::Error)
+                return;
+
+            std::string result;
+            job.ToString(result);
+
+            HtmlParser parser;
+            shared_ptr<HtmlDocument> doc = parser.Parse(result.c_str(), result.size());
+
+            auto recs = doc->GetElementByClassName("firs l").at(0);
+
+            auto headers = recs->GetElementByClassName("dtit");
+            auto images = recs->GetElementByClassName("img");
+
+            int index = 0;
+            for(auto& head : headers)
+            {
+                std::list<Bangumi> _list;
+                auto current = images.at(index);
+                for(auto& item : current->GetElementByTagName("li"))
+                {
+                    Bangumi bangumi {};
+
+                    auto img = item->GetElementByTagName("img").at(0);
+
+                    bangumi.title = img->GetAttribute("alt");
+                    bangumi.image = img->GetAttribute("src");
+
+                    try {
+                        auto p = item->GetElementByTagName("p");
+                        auto plast = p.at(p.size() - 1);
+
+                        bangumi.url = plast->GetElementByTagName("a").at(0)->GetAttribute("href");
+                        bangumi.time = plast->text();
+                    } catch (...) {
+                        bangumi.time = "";
+                        bangumi.url = "";
+                    }
+
+                    _list.push_back(bangumi);
+                }
+
+                auto a = head->GetElementByTagName("a");
+                auto at = a.at(0)->text();
+
+                rs[at] = (_list);
+                index++;
+            }
+
         });
         job.Action(_handler.get());
     }

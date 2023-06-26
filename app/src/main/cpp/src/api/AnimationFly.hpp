@@ -3,6 +3,7 @@
 #include "globals.h"
 
 #include <list>
+#include <map>
 
 namespace anicore
 {
@@ -68,6 +69,7 @@ namespace anicore
         
         virtual void GetPlayList(const std::string& url, BangumiDetilPage& page) = 0;
         virtual void GetPlayPage(const std::string& url, BangumiPlayPage &result) = 0;
+        virtual void GetRecentUpdate(std::map<std::string, std::list<Bangumi>> &result) = 0;
 
     public:
         static ref<AnimationFly> CreateFly(int api);

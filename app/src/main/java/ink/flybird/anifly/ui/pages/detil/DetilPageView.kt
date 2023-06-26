@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.More
@@ -23,17 +24,22 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import ink.flybird.anifly.data.common.createShareUri
 import ink.flybird.anifly.ui.components.AFAnimationCard
 import ink.flybird.anifly.ui.components.AFDetilPageInfoCard
 import ink.flybird.anifly.ui.components.AFRecommandCard
 import ink.flybird.anifly.ui.components.AFScaffold
 import ink.flybird.anifly.ui.components.AFVideoController
 import ink.flybird.anifly.ui.extension.collectAsStateValue
+import ink.flybird.anifly.ui.extension.share
 import ink.flybird.anifly.ui.pages.AFRouteName
 import kotlinx.coroutines.launch
 
@@ -46,7 +52,7 @@ fun DetilPageView(
 ) {
 
     // [1] ViewModel Sync Data And Init Flow Values
-    viewModel.syncData(id)
+    viewModel.syncData(id, navController)
     val uiState = viewModel.detilUiState.collectAsStateValue()
 
     val title = uiState.title.collectAsStateValue(initial = "")
@@ -56,25 +62,29 @@ fun DetilPageView(
     val syncState = uiState.syncState.collectAsStateValue(initial = false)
 
     // ========================================
+    val context = LocalContext.current;
 
-    AFScaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "Back")
+    if (syncState) {
+        AFScaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                    navigationIcon = {
+                        IconButton(onClick = { navController.navigateUp() }) {
+                            Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "Back")
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = { context.share(createShareUri(id)); }) {
+                            Icon(
+                                imageVector = Icons.Filled.Share,
+                                contentDescription = "Share This Bangumi"
+                            )
+                        }
                     }
-                },
-                actions = {
-                    IconButton(onClick = { /* doSomething() */ }) {
-                        Icon(imageVector = Icons.Filled.Share, contentDescription = "Share This Bangumi")
-                    }
-                }
-            )
-        }
-    ) {
-        if(syncState) {
+                )
+            }
+        ) {
             Column {
                 AFDetilPageInfoCard(viewModel)
 
@@ -86,7 +96,11 @@ fun DetilPageView(
                         .padding(start = 6.dp)
                 ) {
                     Log.d("playpage", it)
-                    navController.navigate("${AFRouteName.PlayerPage}/${it.replace("/v/", "").replace(".html", "")}")
+                    navController.navigate(
+                        "${AFRouteName.PlayerPage}/${
+                            it.replace("/v/", "").replace(".html", "")
+                        }"
+                    )
                 }
 
                 Divider(
@@ -106,13 +120,26 @@ fun DetilPageView(
                                 uri = item.url
                             ) {
                                 Log.d(javaClass.name, it)
-                                navController.navigate("${AFRouteName.BangumiDetailPage}/${it.replace("/show/", "").replace(".html", "")}")
+                                navController.navigate(
+                                    "${AFRouteName.BangumiDetailPage}/${
+                                        it.replace(
+                                            "/show/",
+                                            ""
+                                        ).replace(".html", "")
+                                    }"
+                                )
                             }
                         }
                     }
                 }
             }
+
+        }
+    } else {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            LinearProgressIndicator(
+                modifier = Modifier.semantics(mergeDescendants = true) {}.fillMaxWidth()
+            )
         }
     }
-
 }

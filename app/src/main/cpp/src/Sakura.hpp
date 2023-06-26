@@ -22,6 +22,7 @@ namespace anicore
         
         virtual void GetPlayList(const std::string& url, BangumiDetilPage &result) override;
         virtual void GetPlayPage(const std::string& url, BangumiPlayPage &page) override;
+        virtual void GetRecentUpdate(std::map<std::string, std::list<Bangumi>> &result) override;
         
     private:
         ref<NetHandler> _handler;

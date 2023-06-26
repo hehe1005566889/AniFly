@@ -9,14 +9,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.AlertDialog
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
-import androidx.compose.material3.Button
-import androidx.compose.material3.Divider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -28,10 +23,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import coil.size.Precision
 import coil.size.Scale
-import ink.flybird.anifly.network.types.BangumiDetailPage
 import ink.flybird.anifly.ui.extension.collectAsStateValue
 import ink.flybird.anifly.ui.pages.detil.DetilPageViewModel
 
@@ -76,10 +69,10 @@ fun AFDetilPageInfoCard(
                     .padding(10.dp)
             ) {
                 AFAsyncImage(
-                    contentScale = ContentScale.Crop,
                     data = img,
                     scale = Scale.FILL,
                     precision = Precision.INEXACT,
+                    contentScale = ContentScale.Crop,
                 )
             }
 

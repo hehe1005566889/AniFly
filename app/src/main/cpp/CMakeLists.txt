@@ -25,7 +25,7 @@ endif()
 file(GLOB_RECURSE src "src/*.h" "src/*.hpp" "src/*.cpp" "src/*.cpp")
 message(${src})
 add_library("anifly" SHARED
-    anifly.cpp 
+        anifly.cpp
     ${src}
 )
 
@@ -58,4 +58,5 @@ target_link_libraries("anifly" PRIVATE
 
 target_compile_definitions("anifly" PRIVATE
     ${compile_platform}
+    Normal
 )

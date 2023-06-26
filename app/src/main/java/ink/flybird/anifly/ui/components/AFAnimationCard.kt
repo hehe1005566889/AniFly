@@ -20,7 +20,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -60,10 +59,10 @@ fun AFAnimationCard(
                     .size(width = 150.dp, height = 140.dp)
             ) {
                 AFAsyncImage(
-                    contentScale = ContentScale.Crop,
                     data = imgUri,
                     scale = Scale.FILL,
                     precision = Precision.INEXACT,
+                    contentScale = ContentScale.Crop,
                 )
             }
 

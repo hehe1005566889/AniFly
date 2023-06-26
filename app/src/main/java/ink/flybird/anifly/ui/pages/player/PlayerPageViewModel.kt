@@ -1,9 +1,9 @@
 package ink.flybird.anifly.ui.pages.player
 
 import android.util.Log
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.NavController
 import dagger.hilt.android.lifecycle.HiltViewModel
 import ink.flybird.anifly.data.exception.AFPlayerError
 import ink.flybird.anifly.data.exception.ErrorReason
@@ -14,7 +14,6 @@ import ink.flybird.anifly.network.types.BangumiList
 import ink.flybird.anifly.network.types.BangumiPlayList
 import ink.flybird.anifly.network.types.BangumiPlayListList
 import ink.flybird.anifly.network.types.BangumiPlayPage
-import ink.flybird.anifly.ui.extension.collectAsStateValue
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,7 +24,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-const val baseVideoURL = "http://www.yinghuacd.com/v/{}.html"
+const val baseVideoURL = "http://www.yinghuavideo.com/v/{}.html"
 
 @HiltViewModel
 class PlayerPageViewModel @Inject constructor(
@@ -37,15 +36,22 @@ class PlayerPageViewModel @Inject constructor(
     val playerUiState: StateFlow<PlayerUIState> = _playerUiState.asStateFlow()
     private var _syncState = false
 
-    fun syncData(id: String)
+    fun syncData(id: String, navController: NavController)
     {
-        viewModelScope.launch()
+        viewModelScope.launch(ioDispatcher)
         {
+            Log.i(javaClass.name, "On PageSync Call")
             if(_syncState)
                 return@launch
+            _syncState = true
 
             val url = createUri(id)
-            AniCore.getPlayPage(url = url, page = playPage, result = playList, rs = recommandList)
+            val result = AniCore.getPlayPage(url = url, page = playPage, result = playList, rs = recommandList)
+            if(!result)
+            {
+                Log.e(javaClass.name, "On Fetch Player Data Faild")
+                navController.navigateUp()
+            }
             Log.d(javaClass.name, "Fetch Detil Page Done")
             Log.d(javaClass.name, "Name : ${playPage.Get().title}")
 
@@ -60,8 +66,15 @@ class PlayerPageViewModel @Inject constructor(
                     recommandList = MutableStateFlow(recommandList.Get())
                 )
             }
+        }
+    }
 
-            _syncState = true
+    fun updateFullScreenState(value : Boolean)
+    {
+        _playerUiState.update {
+            it.copy(
+                fullScreen = MutableStateFlow(value)
+            )
         }
     }
 
@@ -87,9 +100,11 @@ data class PlayerUIState(
     val playList : Flow<List<BangumiPlayList>> = emptyFlow()
 ) {
 
+    @Deprecated("No Response", ReplaceWith("PlayerPageViewModel.updateFullScreenState", "value : Boolean"))
     fun updateFullScreenState(value : Boolean)
     {
         fullScreen = MutableStateFlow(value)
+        Log.d(javaClass.name, fullScreen.toString())
     }
 
 }

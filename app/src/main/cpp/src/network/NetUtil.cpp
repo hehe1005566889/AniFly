@@ -23,7 +23,7 @@ namespace anicore
 
     static std::string UrlEncode(const std::string &str)
     {
-        std::string strTemp = "";
+        std::string strTemp;
         size_t length = str.length();
         for (size_t i = 0; i < length; i++)
         {
@@ -47,7 +47,7 @@ namespace anicore
 
     static std::string UrlDecode(const std::string &str)
     {
-        std::string strTemp = "";
+        std::string strTemp;
         size_t length = str.length();
         for (size_t i = 0; i < length; i++)
         {
@@ -58,7 +58,7 @@ namespace anicore
                 assert(i + 2 < length);
                 unsigned char high = FromHex((unsigned char)str[++i]);
                 unsigned char low = FromHex((unsigned char)str[++i]);
-                strTemp += high * 16 + low;
+                strTemp += std::to_string(high * 16 + low);
             }
             else
                 strTemp += str[i];

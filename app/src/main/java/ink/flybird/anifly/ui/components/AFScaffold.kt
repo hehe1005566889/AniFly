@@ -22,15 +22,11 @@ fun AFScaffold(
     topBar : @Composable () -> Unit = {},
     bottomBar: (@Composable () -> Unit)? = null,
     floatingActionButton: (@Composable () -> Unit)? = null,
+    modifier: Modifier = Modifier,
     content: @Composable () -> Unit = {},
 ) {
     Scaffold(
-        modifier = Modifier
-            .background(
-                MaterialTheme.colorScheme.surfaceColorAtElevation(
-                    topBarTonalElevation
-                )
-            ),
+        modifier = modifier,
         containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(
             containerTonalElevation
         ) onDark MaterialTheme.colorScheme.surface,

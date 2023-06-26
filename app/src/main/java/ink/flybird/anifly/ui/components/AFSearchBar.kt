@@ -1,23 +1,15 @@
 package ink.flybird.anifly.ui.components
 
-import android.provider.CalendarContract.Colors
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -26,29 +18,36 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import ink.flybird.anifly.ui.pages.AFRouteName
+import androidx.navigation.NavController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AFSearchBar(
-    text : String,
-    icon : ImageVector,
-    action : () -> Unit,
-    callback : (String) -> Unit
+    text: String,
+    navController: NavController? = null,
+    callback: (String) -> Unit
 ) {
 
     var state by remember { mutableStateOf(false) }
     var setext by rememberSaveable { mutableStateOf("") }
 
+
+
     if(!state) {
 
         TopAppBar(
+            navigationIcon = {
+                IconButton(onClick = { navController?.navigateUp() }) {
+                    Icon(
+                        imageVector = Icons.Filled.ArrowBack,
+                        contentDescription = "Back"
+                    )
+                }
+            },
             title = {
                 Text(
                     text,
@@ -62,12 +61,6 @@ fun AFSearchBar(
                         Icon(
                             imageVector = Icons.Filled.Search,
                             contentDescription = "Search Something..."
-                        )
-                    }
-                    IconButton(onClick = action) {
-                        Icon(
-                            imageVector = icon,
-                            contentDescription = "A Icon"
                         )
                     }
                 }
@@ -110,12 +103,16 @@ fun AFSearchBar(
     }
 }
 
+@Deprecated("Same As", ReplaceWith(
+    "AFSearchBar(\"Test\", Icons.Default.Settings, { }) { }",
+    "androidx.compose.material.icons.Icons",
+    "androidx.compose.material.icons.filled.Settings"
+)
+)
 @Preview
 @Composable
 fun PreviewAFSB() {
-    AFSearchBar("Test", Icons.Default.Settings, {
-
-    }) {
+    AFSearchBar("Test") {
 
     }
 }

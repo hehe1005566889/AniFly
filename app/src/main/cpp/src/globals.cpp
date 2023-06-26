@@ -20,7 +20,7 @@ void hello_from_lib()
     CInfo("Done.");
 
     BangumiDetilPage page;
-    fly->GetPlayList("http://www.yinghuacd.com/show/5856.html", page);
+    fly->GetPlayList("http://www./yinghuacd.com/show/5856.html", page);
 
     CInfo("Done.");
 

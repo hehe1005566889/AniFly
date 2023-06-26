@@ -2,15 +2,14 @@ package ink.flybird.anifly.ui.components.player
 
 
 import android.content.pm.ActivityInfo
+import android.view.WindowManager
 import android.widget.ImageButton
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -25,7 +24,6 @@ import com.google.android.exoplayer2.util.RepeatModeUtil
 import ink.flybird.anifly.ui.components.player.extensions.findActivity
 import ink.flybird.anifly.ui.components.player.extensions.lockScreenDrientation
 import ink.flybird.anifly.ui.components.player.extensions.setFullScreen
-import ink.flybird.anifly.ui.components.player.media.AFPlayerCache
 import ink.flybird.anifly.ui.components.player.media.AFPlayerConfig
 import ink.flybird.anifly.ui.components.player.media.applyToExoPlayerView
 
@@ -49,7 +47,6 @@ var fullScreenState = false
  * @param onDismissRequest Callback that occurs when modals are closed.
  * @param securePolicy Policy on setting [android.view.WindowManager.LayoutParams.FLAG_SECURE] on a full screen dialog window.
  */
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 internal fun VideoPlayerFullScreenDialog(
     player: ExoPlayer,
@@ -59,7 +56,6 @@ internal fun VideoPlayerFullScreenDialog(
     repeatMode: AFRepeatMode,
     enablePip: Boolean,
     onDismissRequest: () -> Unit,
-    securePolicy: SecureFlagPolicy,
 ) {
     val context = LocalContext.current
     val fullScreenPlayerView = remember {
@@ -72,21 +68,30 @@ internal fun VideoPlayerFullScreenDialog(
         properties = DialogProperties(
             dismissOnClickOutside = false,
             usePlatformDefaultWidth = false,
-            securePolicy = securePolicy,
-            decorFitsSystemWindows = false,
-        ),
+            decorFitsSystemWindows = false
+        )
     ) {
 
         val view = LocalView.current
-        LaunchedEffect(Unit) {
+        DisposableEffect(Unit) {
+
             StyledPlayerView.switchTargetView(player, currentPlayerView, fullScreenPlayerView)
-
             val currentActivity = context.findActivity()
-            currentActivity.lockScreenDrientation(orientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE)
-           // currentActivity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-            currentActivity.setFullScreen(true)
 
-            (view.parent as DialogWindowProvider).window.setFullScreen(true)
+            // Set Kepp Screen In Activity
+            currentActivity.window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            currentActivity.lockScreenDrientation(orientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE)
+            //currentActivity.setFullScreen(true)
+
+            val window = (view.parent as DialogWindowProvider).window
+            window.setFullScreen(true)
+
+            onDispose {
+                currentActivity.lockScreenDrientation(orientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED)
+                currentActivity.window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                //currentActivity.setFullScreen(false)
+                (view.parent as DialogWindowProvider).window.setFullScreen(false)
+            }
         }
 
         LaunchedEffect(controllerConfig) {
@@ -109,23 +114,17 @@ internal fun VideoPlayerFullScreenDialog(
             )
         }
 
-        Box(
+        VideoPlayerSurface(
+            defaultPlayerView = fullScreenPlayerView,
+            player = player,
+            usePlayerController = true,
+            handleLifecycle = !enablePip,
+            enablePip = enablePip,
             modifier = Modifier
+                .background(Color.Black)
                 .fillMaxSize()
-                .background(Color.Black),
-        ) {
-            VideoPlayerSurface(
-                defaultPlayerView = fullScreenPlayerView,
-                player = player,
-                usePlayerController = true,
-                handleLifecycle = !enablePip,
-                autoDispose = false,
-                enablePip = enablePip,
-                onPipEntered = { onDismissRequest() },
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .fillMaxSize(),
-            )
-        }
+        ) { onDismissRequest() }
+        //.align(Alignment.Center),
+
     }
 }

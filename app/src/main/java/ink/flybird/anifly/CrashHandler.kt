@@ -1,6 +1,7 @@
 package ink.flybird.anifly
 
 import android.content.Context
+import android.content.Intent
 import android.os.Looper
 import android.util.Log
 import ink.flybird.anifly.ui.extension.showToastLong
@@ -21,12 +22,14 @@ class CrashHandler(private val context: Context) : UncaughtExceptionHandler {
     override fun uncaughtException(p0: Thread, p1: Throwable) {
         val causeMessage = getCauseMessage(p1)
 
+        p1.printStackTrace()
         Log.e(javaClass.name, "|> AnimationFly System Exception")
         Log.e(javaClass.name, "|> Message : $causeMessage")
         for(trace in p1.stackTrace)
             Log.e(javaClass.name, "|- at ${trace.lineNumber} from ${trace.className}:${trace.methodName} (in ${trace.fileName}, is Native Func : ${trace.isNativeMethod}")
 
-        context.showToastLong("AnimationFly System Error : $causeMessage")
+        //context.startActivity(sendIntent)
+        //context.showToastLong("AnimationFly System Error : $causeMessage")
     }
 
     private fun getCauseMessage(e: Throwable?): String? {

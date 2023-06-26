@@ -1,5 +1,7 @@
 #include "Logger.h"
 
+#include "anifly.h"
+
 namespace anicore
 {
 
@@ -39,6 +41,10 @@ void Logger::set_format(spdlog::logger *logger, const char* format)
 {
     logger->set_pattern(format);
     logger->flush();
+}
+
+void Logger::push_error(int code, const char *msg) {
+    tools::callContextCallBack(code, std::initializer_list<std::string> { msg });
 }
 
 

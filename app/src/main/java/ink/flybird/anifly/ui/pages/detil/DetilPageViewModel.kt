@@ -1,9 +1,14 @@
 package ink.flybird.anifly.ui.pages.detil
 
+import android.util.Log
+import androidx.compose.animation.scaleOut
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.NavController
+import dagger.hilt.android.lifecycle.HiltViewModel
 import ink.flybird.anifly.data.exception.AFDetilPageError
 import ink.flybird.anifly.data.exception.DetilPageReason
+import ink.flybird.anifly.data.module.IODispatcher
 import ink.flybird.anifly.network.AniCore
 import ink.flybird.anifly.network.types.Bangumi
 import ink.flybird.anifly.network.types.BangumiDetail
@@ -12,6 +17,7 @@ import ink.flybird.anifly.network.types.BangumiList
 import ink.flybird.anifly.network.types.BangumiPlayList
 import ink.flybird.anifly.network.types.BangumiPlayListList
 import ink.flybird.anifly.ui.pages.player.PlayerUIState
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,26 +25,36 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-const val DETIAL_URL = "http://www.yinghuacd.com/show/{}.html"
+const val DETIAL_URL = "http://www.yinghuavideo.com/show/{}.html"
 
-class DetilPageViewModel  : ViewModel() {
+@HiltViewModel
+class DetilPageViewModel  @Inject constructor(
+    @IODispatcher
+    private val ioDispatcher: CoroutineDispatcher
+)  : ViewModel() {
 
     private val _detilUiState = MutableStateFlow(DetilPageUIState())
     val detilUiState: StateFlow<DetilPageUIState> = _detilUiState.asStateFlow()
     private var _syncState = false
 
     fun syncData(
-        id : String
+        id : String, navController: NavController
     ) {
-
-        viewModelScope.launch()
+        viewModelScope.launch(ioDispatcher)
         {
             if(_syncState)
                 return@launch
+            _syncState = true
 
             val uri = createUri(id)
-            AniCore.getPlayList(uri, page, playList, recommandList)
+            val result = AniCore.getPlayList(uri, page, playList, recommandList)
+            if(!result)
+            {
+                Log.e(javaClass.name, "Detil Page Fetch Data Faild")
+                navController.navigateUp()
+            }
 
             val pageObj = page.Get()
 
@@ -59,7 +75,6 @@ class DetilPageViewModel  : ViewModel() {
                 )
             }
 
-            _syncState = true
         }
     }
 
